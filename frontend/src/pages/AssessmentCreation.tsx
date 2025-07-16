@@ -443,13 +443,19 @@ function AssessmentCreation(): JSX.Element {
                             fontWeight: 'normal', 
                             cursor: 'pointer',
                             display: 'flex',
-                            gap: '8px'
+                            gap: '0px'
                           }}>
                             <input
                               type="checkbox"
                               checked={formData.selectedChallenges.includes(question.id)}
                               onChange={() => handleQuestionToggle(question.id)}
-                              style={{ marginTop: '2px', flexShrink: 0 }}
+                              style={{ 
+                                marginTop: '2px', 
+                                flexShrink: 0,
+                                width: '16px',
+                                height: '16px',
+                                margin: '0 8px 0 0'
+                              }}
                             />
                             <div style={{ flex: 1 }}>
                               {/* Question badges */}
