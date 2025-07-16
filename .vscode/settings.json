@@ -1,0 +1,11 @@
+{
+    "editor.fontSize": 12,
+    "editor.tabSize": 4,
+    "git.autofetch": true,
+    "security.workspace.trust.startupPrompt": "never",
+    "files.autoSaveDelay": 1,
+    "files.autoSave": "afterDelay",
+    "workbench.editorAssociations": {
+        "*.md": "vscode.markdown.preview.editor"
+    }
+}
