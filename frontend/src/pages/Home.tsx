@@ -57,8 +57,8 @@ function Home(): JSX.Element {
       color: '#007bff'
     },
     {
-      title: 'Assessment Creation',
-      description: 'Combine questions into comprehensive assessments with time limits and passing scores.',
+      title: 'Assessments',
+      description: 'Create, manage, and organize assessments with multiple questions, time limits, and password protection.',
       icon: '📋',
       link: '/assessments',
       color: '#28a745'

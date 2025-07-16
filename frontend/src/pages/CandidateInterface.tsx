@@ -36,6 +36,10 @@ function CandidateInterface(): JSX.Element {
   const [passwordRequired, setPasswordRequired] = useState<boolean>(false)
   const [password, setPassword] = useState<string>('')
   const [passwordError, setPasswordError] = useState<string>('')
+  const [emailRequired, setEmailRequired] = useState<boolean>(false)
+  const [candidateEmail, setCandidateEmail] = useState<string>('')
+  const [emailError, setEmailError] = useState<string>('')
+  const [assessmentStarted, setAssessmentStarted] = useState<boolean>(false)
 
   useEffect(() => {
     if (id) {
@@ -46,7 +50,7 @@ function CandidateInterface(): JSX.Element {
   }, [id])
 
   useEffect(() => {
-    if (timeRemaining !== null && timeRemaining > 0) {
+    if (assessmentStarted && timeRemaining !== null && timeRemaining > 0) {
       const timer = setTimeout(() => {
         setTimeRemaining(timeRemaining - 1)
       }, 1000)
@@ -54,7 +58,7 @@ function CandidateInterface(): JSX.Element {
     } else if (timeRemaining === 0) {
       handleSubmit()
     }
-  }, [timeRemaining])
+  }, [timeRemaining, assessmentStarted])
 
   const loadAssessment = async (attemptPassword?: string) => {
     if (!id) return
@@ -63,8 +67,8 @@ function CandidateInterface(): JSX.Element {
       setPasswordError('')
       const data = await getAssessmentForCandidate(id, attemptPassword)
       setAssessment(data.assessment)
-      setTimeRemaining(data.assessment?.timeLimit * 60) // Convert to seconds
       setPasswordRequired(false)
+      setEmailRequired(true) // Show email collection after successful authentication
     } catch (error: any) {
       console.error('Error loading assessment:', error)
       if (error.requiresPassword) {
@@ -84,6 +88,27 @@ function CandidateInterface(): JSX.Element {
     }
   }
 
+  const handleEmailSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setEmailError('')
+    
+    if (!candidateEmail.trim()) {
+      setEmailError('Email address is required')
+      return
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(candidateEmail.trim())) {
+      setEmailError('Please enter a valid email address')
+      return
+    }
+    
+    setEmailRequired(false)
+    setAssessmentStarted(true)
+    setTimeRemaining(assessment?.timeLimit ? assessment.timeLimit * 60 : null) // Start timer when assessment actually begins
+  }
+
   const handleAnswerChange = (questionId: string, answerIndex: number) => {
     setAnswers({
       ...answers,
@@ -93,8 +118,8 @@ function CandidateInterface(): JSX.Element {
 
   const handleSubmit = async () => {
     try {
-      if (!id) return
-      await submitAssessment(id, answers)
+      if (!id || !candidateEmail.trim()) return
+      await submitAssessment(id, candidateEmail.trim(), answers)
       setSubmitted(true)
     } catch (error) {
       console.error('Error submitting assessment:', error)
@@ -120,10 +145,6 @@ function CandidateInterface(): JSX.Element {
           <h3>Assessment Access</h3>
           <p>To take an assessment, you need a direct link from your interviewer.</p>
           <p>Assessment links look like: <code>/take-assessment/[assessment-id]</code></p>
-          
-          <div className="alert alert-info">
-            <strong>TODO for Candidate:</strong> Implement assessment access and candidate authentication.
-          </div>
         </div>
       </div>
     )
@@ -189,6 +210,52 @@ function CandidateInterface(): JSX.Element {
     )
   }
 
+  if (emailRequired) {
+    return (
+      <div>
+        <h1>Enter Your Email</h1>
+        <div className="card">
+          <h3>Please provide your email address to complete the assessment.</h3>
+          
+          {emailError && (
+            <div style={{ 
+              backgroundColor: '#f8d7da', 
+              color: '#721c24', 
+              padding: '12px', 
+              borderRadius: '4px', 
+              marginBottom: '16px',
+              border: '1px solid #f5c6cb'
+            }}>
+              {emailError}
+            </div>
+          )}
+          
+          <form onSubmit={handleEmailSubmit}>
+            <div className="form-group">
+              <label>Email Address:</label>
+              <input
+                type="email"
+                value={candidateEmail}
+                onChange={(e) => setCandidateEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+                style={{ width: '100%', padding: '12px', fontSize: '16px' }}
+              />
+            </div>
+            <button 
+              type="submit" 
+              className="btn"
+              disabled={!candidateEmail.trim()}
+              style={{ width: '100%', padding: '12px', fontSize: '16px' }}
+            >
+              Continue to Assessment
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
   if (!assessment) {
     return (
       <div>
@@ -196,6 +263,17 @@ function CandidateInterface(): JSX.Element {
         <div className="card">
           <p>The assessment you're looking for doesn't exist or may have expired.</p>
           <p>Please check your assessment link or contact the hiring team.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!assessmentStarted) {
+    return (
+      <div>
+        <h1>Assessment Not Started</h1>
+        <div className="card">
+          <p>The assessment has not yet started. Please wait for the interviewer to begin.</p>
         </div>
       </div>
     )
@@ -310,11 +388,6 @@ function CandidateInterface(): JSX.Element {
         >
           Submit Assessment
         </button>
-      </div>
-
-      <div className="alert alert-info">
-        <strong>TODO for Candidate:</strong> Implement the candidate multiple choice assessment-taking experience. 
-        Consider what makes a good multiple choice assessment interface and how to handle answer submissions properly.
       </div>
     </div>
   )

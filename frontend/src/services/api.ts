@@ -24,6 +24,7 @@ interface Question {
   interface Submission {
     id: string;
     assessmentId: string;
+    candidateEmail: string;
     answers: Record<string, number>;
     score: number;
     correctCount: number;

@@ -17,9 +17,9 @@ function Navigation(): JSX.Element {
         <ul>
           <li><Link to="/" className={isActive('/')}>Home</Link></li>
           <li><Link to="/challenges" className={isActive('/challenges')}>Question Management</Link></li>
-          <li><Link to="/assessments" className={isActive('/assessments')}>Assessment Creation</Link></li>
+          <li><Link to="/assessments" className={isActive('/assessments')}>Assessments</Link></li>
           <li><Link to="/take-assessment" className={isActive('/take-assessment')}>Take Assessment</Link></li>
-          <li><Link to="/results" className={isActive('/results')}>Results Review</Link></li>
+          <li><Link to="/results" className={isActive('/results')}>Results</Link></li>
         </ul>
       </div>
     </nav>

@@ -12,6 +12,7 @@ interface DetailedAnswer {
 interface Submission {
   id: string;
   assessmentId: string;
+  candidateEmail: string;
   answers: Record<string, number>;
   score: number;
   correctCount: number;
@@ -29,6 +30,7 @@ function ResultsReview(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(true)
   const [detailsLoading, setDetailsLoading] = useState<boolean>(false)
   const [filter, setFilter] = useState('all')
+  const [searchTerm, setSearchTerm] = useState<string>('')
 
   useEffect(() => {
     loadSubmissions()
@@ -68,10 +70,22 @@ function ResultsReview(): JSX.Element {
   }
 
   const filteredSubmissions = submissions.filter(submission => {
-    if (filter === 'all') return true
-    if (filter === 'passed') return submission.passed
-    if (filter === 'failed') return !submission.passed
-    return true
+    // First apply status filter
+    let matchesFilter = true
+    if (filter === 'passed') matchesFilter = submission.passed
+    if (filter === 'failed') matchesFilter = !submission.passed
+    
+    // Then apply search filter
+    let matchesSearch = true
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase()
+      matchesSearch = Boolean(
+        (submission.candidateEmail && submission.candidateEmail.toLowerCase().includes(search)) ||
+        (submission.assessmentTitle && submission.assessmentTitle.toLowerCase().includes(search))
+      )
+    }
+    
+    return matchesFilter && matchesSearch
   })
 
   if (loading) {
@@ -94,24 +108,44 @@ function ResultsReview(): JSX.Element {
       </div>
       
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3>Assessment Submissions</h3>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <label style={{ fontSize: '14px', color: '#666' }}>Filter:</label>
-            <select 
-              value={filter} 
-              onChange={(e) => setFilter(e.target.value)}
-              style={{ 
-                padding: '6px 12px',
-                border: '2px solid #e9ecef',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
-            >
-              <option value="all">All Submissions</option>
-              <option value="passed">✅ Passed Only</option>
-              <option value="failed">❌ Failed Only</option>
-            </select>
+        <div style={{ marginBottom: '20px' }}>
+          <h3 style={{ marginBottom: '15px' }}>Assessment Submissions</h3>
+          
+          {/* Search and Filter Controls */}
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '15px', alignItems: 'end' }}>
+            <div className="form-group">
+              <label>Search Candidates:</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by candidate email or assessment name..."
+                style={{ width: '100%' }}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Filter by Status:</label>
+              <select 
+                value={filter} 
+                onChange={(e) => setFilter(e.target.value)}
+                style={{ 
+                  padding: '8px 12px',
+                  border: '2px solid #e9ecef',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  width: '100%'
+                }}
+              >
+                <option value="all">All Submissions</option>
+                <option value="passed">✅ Passed Only</option>
+                <option value="failed">❌ Failed Only</option>
+              </select>
+            </div>
+          </div>
+          
+          <div style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+            Showing {filteredSubmissions.length} of {submissions.length} submissions
           </div>
         </div>
 
@@ -124,7 +158,34 @@ function ResultsReview(): JSX.Element {
             color: '#666'
           }}>
             <h4>📝 No Submissions Found</h4>
-            <p>No candidates have completed assessments yet, or no submissions match your filter.</p>
+            <p>
+              {submissions.length === 0 
+                ? 'No candidates have completed assessments yet.'
+                : searchTerm.trim() || filter !== 'all'
+                  ? 'No submissions match your search criteria. Try adjusting your search or filters.'
+                  : 'No submissions match your filter criteria.'
+              }
+            </p>
+            {(searchTerm.trim() || filter !== 'all') && submissions.length > 0 && (
+              <button 
+                onClick={() => {
+                  setSearchTerm('')
+                  setFilter('all')
+                }}
+                style={{
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  marginTop: '10px'
+                }}
+              >
+                Clear Search & Filters
+              </button>
+            )}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: selectedSubmission ? '1fr 2fr' : '1fr', gap: '25px' }}>
@@ -170,6 +231,10 @@ function ResultsReview(): JSX.Element {
                     <h5 style={{ color: '#2c3e50', marginBottom: '8px', fontSize: '16px' }}>
                       🎯 {submission.assessmentTitle || 'Unknown Assessment'}
                     </h5>
+                    
+                    <div style={{ marginBottom: '8px', fontSize: '14px', color: '#666' }}>
+                      📧 <strong>Candidate:</strong> {submission.candidateEmail}
+                    </div>
                     
                     <div style={{ marginBottom: '12px' }}>
                       <div style={{ 
