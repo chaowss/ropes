@@ -26,6 +26,16 @@
     padding: 20px;
   }
   
+  /* Global checkbox styling to prevent oversized checkboxes */
+  input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    transform: none !important;
+    accent-color: #007bff;
+  }
+  
   .nav {
     background-color: #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
